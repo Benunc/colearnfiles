@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mirror Tracing Exercise</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button.active {
+            background: #2196F3;
+        }
+
+        button.clear {
+            background: #f44336;
+        }
+
+        button.clear:hover {
+            background: #da190b;
+        }
+
+        button#saveBtn {
+            background: #FF9800;
+        }
+
+        button#saveBtn:hover {
+            background: #F57C00;
+        }
+
+        .canvas-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .canvas-wrapper {
+            text-align: center;
+        }
+
+        .canvas-wrapper h3 {
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: crosshair;
+            background: white;
+        }
+
+        .info {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mirror Tracing Exercise</h1>
+        
+        <div class="controls">
+            <button id="starBtn" class="active">Star</button>
+            <button id="squareBtn">Square</button>
+            <button class="clear" id="clearBtn">Clear</button>
+            <button id="saveBtn" style="background: #FF9800;">Save Image</button>
+        </div>
+
+        <div class="canvas-container">
+            <div class="canvas-wrapper">
+                <h3>Target</h3>
+                <canvas id="originalCanvas" width="400" height="400"></canvas>
+            </div>
+            <div class="canvas-wrapper">
+                <h3>Draw Here (Mirrored)</h3>
+                <canvas id="mirrorCanvas" width="400" height="400"></canvas>
+            </div>
+        </div>
+
+        <div class="info">
+            <p>Draw on the right canvas to trace the target shape. Your movements are mirrored, making it challenging!</p>
+        </div>
+    </div>
+
+    <script>
+        const originalCanvas = document.getElementById('originalCanvas');
+        const mirrorCanvas = document.getElementById('mirrorCanvas');
+        const originalCtx = originalCanvas.getContext('2d');
+        const mirrorCtx = mirrorCanvas.getContext('2d');
+
+        let currentShape = 'star';
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Set line properties for drawing on original canvas
+        originalCtx.lineWidth = 3;
+        originalCtx.lineCap = 'round';
+        originalCtx.lineJoin = 'round';
+        originalCtx.strokeStyle = '#2196F3';
+
+        // Draw the target shape
+        function drawTargetShape() {
+            const ctx = originalCtx;
+            const width = originalCanvas.width;
+            const height = originalCanvas.height;
+
+            ctx.clearRect(0, 0, width, height);
+            mirrorCtx.clearRect(0, 0, mirrorCanvas.width, mirrorCanvas.height);
+
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+
+            if (currentShape === 'star') {
+                // Draw a 5-pointed star
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const outerRadius = Math.min(width, height) * 0.35;
+                const innerRadius = outerRadius * 0.4;
+                const numPoints = 5;
+                
+                ctx.beginPath();
+                for (let i = 0; i < numPoints * 2; i++) {
+                    const angle = (i * Math.PI) / numPoints - Math.PI / 2;
+                    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                    const x = centerX + radius * Math.cos(angle);
+                    const y = centerY + radius * Math.sin(angle);
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.closePath();
+                ctx.stroke();
+            } else if (currentShape === 'square') {
+                // Draw a square
+                const size = width * 0.4;
+                const startX = (width - size) / 2;
+                const startY = (height - size) / 2;
+                ctx.strokeRect(startX, startY, size, size);
+            }
+
+            ctx.setLineDash([]);
+            // Reset to drawing color for student's trace
+            ctx.strokeStyle = '#2196F3';
+            ctx.lineWidth = 3;
+        }
+
+        // Mirror coordinates horizontally
+        function mirrorX(x, canvasWidth) {
+            return canvasWidth - x;
+        }
+
+        // Mirror coordinates vertically
+        function mirrorY(y, canvasHeight) {
+            return canvasHeight - y;
+        }
+
+        // Get mouse position relative to canvas
+        function getMousePos(e, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        // Start drawing on mirror canvas
+        mirrorCanvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            const pos = getMousePos(e, mirrorCanvas);
+            lastX = pos.x;
+            lastY = pos.y;
+        });
+
+        // Draw while moving on mirror canvas
+        mirrorCanvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+
+            const pos = getMousePos(e, mirrorCanvas);
+            
+            // Mirror the coordinates both horizontally and vertically
+            const mirroredX = mirrorX(pos.x, originalCanvas.width);
+            const mirroredY = mirrorY(pos.y, originalCanvas.height);
+            const mirroredLastX = mirrorX(lastX, originalCanvas.width);
+            const mirroredLastY = mirrorY(lastY, originalCanvas.height);
+            
+            originalCtx.beginPath();
+            originalCtx.moveTo(mirroredLastX, mirroredLastY);
+            originalCtx.lineTo(mirroredX, mirroredY);
+            originalCtx.stroke();
+
+            lastX = pos.x;
+            lastY = pos.y;
+        });
+
+        // Stop drawing
+        mirrorCanvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        mirrorCanvas.addEventListener('mouseleave', () => {
+            isDrawing = false;
+        });
+
+        // Touch events for mobile
+        mirrorCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousedown', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            mirrorCanvas.dispatchEvent(mouseEvent);
+        });
+
+        mirrorCanvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            mirrorCanvas.dispatchEvent(mouseEvent);
+        });
+
+        mirrorCanvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const mouseEvent = new MouseEvent('mouseup', {});
+            mirrorCanvas.dispatchEvent(mouseEvent);
+        });
+
+        // Button handlers
+        document.getElementById('starBtn').addEventListener('click', () => {
+            currentShape = 'star';
+            document.getElementById('starBtn').classList.add('active');
+            document.getElementById('squareBtn').classList.remove('active');
+            drawTargetShape();
+        });
+
+        document.getElementById('squareBtn').addEventListener('click', () => {
+            currentShape = 'square';
+            document.getElementById('squareBtn').classList.add('active');
+            document.getElementById('starBtn').classList.remove('active');
+            drawTargetShape();
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            drawTargetShape();
+        });
+
+        // Save image functionality
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            // Create a temporary canvas with white background
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = originalCanvas.width;
+            tempCanvas.height = originalCanvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Fill with white background
+            tempCtx.fillStyle = '#ffffff';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Draw the original canvas on top
+            tempCtx.drawImage(originalCanvas, 0, 0);
+            
+            // Convert to image and download
+            const dataURL = tempCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `mirror-trace-${currentShape}-${Date.now()}.png`;
+            link.href = dataURL;
+            link.click();
+        });
+
+        // Initialize with star shape
+        drawTargetShape();
+    </script>
+</body>
+</html>
+
