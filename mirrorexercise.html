@@ -36,6 +36,30 @@
             color: #333;
         }
 
+        .instructions {
+            background: #f9f9f9;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .instructions h2 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
         .controls {
             display: flex;
             gap: 10px;
@@ -114,6 +138,15 @@
     <div class="container">
         <h1>Mirror Tracing Exercise</h1>
         
+        <div class="instructions">
+            <h2>Instructions:</h2>
+            <ol>
+                <li>Attempt to draw on the right canvas. You'll see your drawing on the left canvas.</li>
+                <li>Important: take no more than 1 practice attempt before saving the image.</li>
+                <li>After saving the image, try it a few more times. Note whether it gets easier to hit the target.</li>
+            </ol>
+        </div>
+        
         <div class="controls">
             <button id="starBtn" class="active">Star</button>
             <button id="squareBtn">Square</button>
@@ -130,10 +163,6 @@
                 <h3>Draw Here (Mirrored)</h3>
                 <canvas id="mirrorCanvas" width="400" height="400"></canvas>
             </div>
-        </div>
-
-        <div class="info">
-            <p>Draw on the right canvas to trace the target shape. Your movements are mirrored, making it challenging!</p>
         </div>
     </div>
 
